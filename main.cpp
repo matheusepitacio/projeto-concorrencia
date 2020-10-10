@@ -74,7 +74,7 @@ int main(){
     else if (command == "r") remove_song(songs);
     else if (command == "l") list_songs(songs);
     else if (command == "e") break;
-    else cout << "Command not reconigzed, try anoter" << endl;
+    else cout << "Command not reconigzed, try another" << endl;
   }
 
 }
