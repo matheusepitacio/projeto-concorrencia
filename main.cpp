@@ -1,80 +1,122 @@
 #include <bits/stdc++.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 
 using namespace std;
 
-typedef struct song{
-  string artist;
-  string name;
-  int duration;
+typedef struct song
+{
+    string artist;
+    string name;
+    int duration;
 
-  song(string artist, string name, int duration){
-    this->artist = artist;
-    this->name = name;
-    this->duration = duration;
-  }
+    song(string artist, string name, int duration)
+    {
+        this->artist = artist;
+        this->name = name;
+        this->duration = duration;
+    }
+
+    song(){}
 } song;
 
-void add_song(list<song*>& songs){
-  string artist, name, duration_string;
-  cout << "Type artist: " << endl;
-  getline(cin, artist);
-  cout << "Type name: " << endl;
-  getline(cin, name);
-  cout << "Type duration in seconds: " << endl;
-  getline(cin, duration_string);
-  int duration = stoi(duration_string);
-  song* new_song = new song(artist, name, duration);
-  songs.push_back(new_song);
-  sleep(2);
+song* songs;
+int size = 0;
+int length = 0;
+pthread_mutex_t mutex_thread = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond_thread = PTHREAD_COND_INITIALIZER;
 
+void * add_song(void* args)
+{
+    while (pthread_mutex_trylock(&mutex_thread));
+    
+    if (size == length){
+        song* aux = new song [2*size + 1];
+        for (int i = 0; i < size; i++) aux[i] = songs[i];
+
+        delete [] songs;
+
+        songs = aux;
+
+        size = 2*size + 1;
+    }
+
+    song* new_song = (song* ) args;
+    songs[length] = (*new_song);
+    length++;
+
+
+    for (int i = 0; i < length; i++) cout << i+1 << "- " << "Artist: " << songs[i].artist << " Name: " << songs[i].name << " Duration: " << songs[i].duration  << endl;
+
+
+    pthread_cond_signal(&cond_thread);
+    pthread_mutex_unlock(&mutex_thread);
+
+    pthread_exit(NULL);
 }
 
-void remove_song(list<song*>& songs){
-  int i = 0;
-  map <int, list<song*>::iterator> index;
-  for (auto it = songs.begin(); it != songs.end(); it ++, i++){
-    cout << i+1 << "- " << "Artist: " << (*it)->artist << " Name: " << (*it)->name << " Duration: " << (*it)->duration << endl;
-    index[i+1] = it;
-  }
-  sleep(2);
-  if (songs.size() == 0 ) cout << "No songs to remove" << endl;
-  else {
-    cout << "Type the number of the song you want to remove" << endl;
-    string index_remove_string;
-    int index_remove;
-    getline(cin, index_remove_string);
-    index_remove = stoi(index_remove_string);
-    songs.erase(index[index_remove]);
-  }
-  sleep(2);
+void* remove_song(void * args)
+{
+    while (pthread_mutex_trylock(&mutex_thread));
+
+    int index = *(int*) args - 1;
+    song* aux = new song[size];
+    for (int i = 0; i < length; i++) if (i != index) aux[i] = songs[i];
+
+    delete [] songs;
+    songs = aux;
+    length--;
+
+    for (int i = 0; i < length; i++) cout << i+1 << "- " << "Artist: " << songs[i].artist << " Name: " << songs[i].name << " Duration: " << songs[i].duration  << endl;
+
+    pthread_cond_signal(&cond_thread);
+    pthread_mutex_unlock(&mutex_thread);
+
+    pthread_exit(NULL);
 }
 
-void list_songs(list <song*>& songs){
-  int i = 0;
-  for (auto it = songs.begin(); it != songs.end(); it ++, i++){
-    cout << i+1 << "- " << "Artist: " << (*it)->artist << " Name: " << (*it)->name << " Duration: " << (*it)->duration << endl;
-  }
-  if (songs.size() == 0) cout << "The list of songs is empty" << endl;
-  sleep(2);
-}
-
-int main(){
-  list <song*> songs;
-  while (true){
+int main()
+{
     cout << "Menu" << endl;
     cout << "Add song- a" << endl;
     cout << "Remove song- r" << endl;
     cout << "List songs - l" << endl;
     cout << "Exit - e" << endl;
-    string command;
-    getline(cin, command);
-    if (command == "a") add_song(songs);
-    else if (command == "r") remove_song(songs);
-    else if (command == "l") list_songs(songs);
-    else if (command == "e") break;
-    else cout << "Command not reconigzed, try another" << endl;
-  }
+    while (true)
+    {
+        string command;
+        getline(cin, command);
+        if (command == "a")
+        {
+            pthread_t add_thread;
+            string artist, name, duration_string;
+            cout << "Type artist: " << endl;
+            getline(cin, artist);
+            cout << "Type name: " << endl;
+            getline(cin, name);
+            cout << "Type duration in seconds: " << endl;
+            getline(cin, duration_string);
+            int duration = stoi(duration_string);
+            song new_song (artist, name, duration);
+            pthread_create(&add_thread, NULL, &add_song, &new_song);
 
+            pthread_cond_wait(&cond_thread, &mutex_thread);
+
+        }
+        else if (command == "r")
+        {
+            pthread_t remove_thread;
+            cout << "Type the number of the song you want to remove" << endl;
+            string index_string;
+            getline(cin, index_string);
+            int index = stoi(index_string);
+            pthread_create(&remove_thread, NULL, &remove_song, &index);
+
+            pthread_cond_wait(&cond_thread, &mutex_thread);
+        }
+        else if (command == "e") break;
+        else cout << "Command not reconigzed, try another" << endl;
+   
+    }
 }
