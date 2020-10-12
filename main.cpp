@@ -29,11 +29,10 @@ pthread_cond_t cond_thread = PTHREAD_COND_INITIALIZER;    //condicional
 
 void *add_song(void *args) //funcao para adicionar musica, o argumento e um objeto do tipo song
 {
-    while (pthread_mutex_trylock(&mutex_thread))
-        ; //mutex para proteger o songs
+    while (pthread_mutex_trylock(&mutex_thread)); //mutex para proteger o songs
 
     if (size == length)
-    { // funcao que dobra o tamanho do array dinamico
+    { //dobra o tamanho do array dinamico se estiver cheio
         song *aux = new song[2 * size];
         for (int i = 0; i < size; i++)
             aux[i] = songs[i];
@@ -62,7 +61,7 @@ void *add_song(void *args) //funcao para adicionar musica, o argumento e um obje
 
 void *remove_song(void *args) //funcao para remocao de musicas, o argumento e um inteiro que indica o indice de musica a ser removida
 {
-    while (pthread_mutex_trylock(&mutex_thread));
+    while (pthread_mutex_trylock(&mutex_thread)); //mutex para proteger o songs
 
     int index = *(int *)args - 1;
     if (index >= 0 && index < length) //checka se o index a removido esta dentro do array
@@ -79,8 +78,8 @@ void *remove_song(void *args) //funcao para remocao de musicas, o argumento e um
         cout << "Index out of range" << endl;
     }
 
-    pthread_cond_signal(&cond_thread);
-    pthread_mutex_unlock(&mutex_thread);
+    pthread_cond_signal(&cond_thread); //liberando a condicao
+    pthread_mutex_unlock(&mutex_thread); //desprotegendo a variavel
 
     pthread_exit(NULL);
 }
@@ -110,7 +109,7 @@ int main()
             song new_song(artist, name, duration); 
             pthread_create(&add_thread, NULL, &add_song, &new_song);
 
-            pthread_cond_wait(&cond_thread, &mutex_thread);
+            pthread_cond_wait(&cond_thread, &mutex_thread); //espera a condicao
         }
         else if (command == "r")
         {
@@ -121,7 +120,7 @@ int main()
             int index = stoi(index_string); //converte a linha do indice para int
             pthread_create(&remove_thread, NULL, &remove_song, &index);
 
-            pthread_cond_wait(&cond_thread, &mutex_thread);
+            pthread_cond_wait(&cond_thread, &mutex_thread); //espera a condicao
         }
         else if (command == "e")
             break;
