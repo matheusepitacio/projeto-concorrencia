@@ -129,6 +129,6 @@ int main()
         else if (command == "e")
             break;
         else
-            cout << "Command not reconigzed, try another" << endl;
+            cout << "Command not recognized, try another" << endl;
     }
 }
