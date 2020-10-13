@@ -1,3 +1,7 @@
+/*
+    Dupla: Matheus Epitacio Barros de Lucena (mebl) e Matheus Marinho de Morais Leca (mmml2)
+*/
+
 #include <bits/stdc++.h>
 #include <stdlib.h>
 #include <unistd.h>
