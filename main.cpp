@@ -278,9 +278,6 @@ int main()
         case 's':
             pause_song = abs(pause_song - 1);
             break;
-        case 'x':
-            stop_song = 1;
-            break;
         case 'n':
             next_song = 1;
             break;
