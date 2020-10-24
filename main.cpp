@@ -127,6 +127,10 @@ void *play_song(void *args)
         }
         next_song = 0;
         choice++;
+        wclear(song_win);
+        werase(song_win);
+        box(song_win, 0, 0);
+        mvwprintw(song_win, 0, (maxX / 2 - strlen("Song")) / 2, "Song");
         if (stop_song == 1) break;
     }
 
@@ -154,7 +158,7 @@ int main()
     box(menu_win, 0, 0);
     mvwprintw(menu_win, 0, (maxX / 2 - strlen("Menu")) / 2, "Menu");
     mvwprintw(menu_win, 1, 1, "Add song - a");
-    mvwprintw(menu_win, 2, 1, "Delete song - a");
+    mvwprintw(menu_win, 2, 1, "Delete song - d");
     mvwprintw(menu_win, 3, 1, "Play song - p");
     mvwprintw(menu_win, 4, 1, "Pause/return song - s");
     mvwprintw(menu_win, 5, 1, "Next song - n");
