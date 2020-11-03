@@ -1,3 +1,8 @@
+/*
+    Dupla: Matheus Epitacio Barros de Lucena e Matheus Marinho Morais Leca
+    mebl e mmml2
+*/
+
 #include <bits/stdc++.h>
 #include <pthread.h>
 #include <ncurses.h>
@@ -5,14 +10,7 @@
 
 using namespace std;
 
-typedef struct Play_song_args
-{
-    string song;
-    int duration;
-    WINDOW *song_win;
-} Play_song_args;
-
-typedef struct Song
+typedef struct Song //struct da musica com nome e duracao
 {
     string song_name;
     int duration;
@@ -24,11 +22,11 @@ pthread_mutex_t mutex_add = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond_add = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex_remove = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond_remove = PTHREAD_COND_INITIALIZER;
-Song *songs = new Song[1];
+Song *songs = new Song[1]; //array dinamico das musicas
 int size = 1;
 int length = 0;
 
-void *add_song(void *args)
+void *add_song(void *args) //funcao que adiciona no array dinamico
 {
     while (pthread_mutex_trylock(&mutex_add))
         ;
@@ -58,7 +56,7 @@ void *add_song(void *args)
     pthread_exit(NULL);
 }
 
-void *remove_song(void *args)
+void *remove_song(void *args) //fjncao que remove do array dinamico
 {
     while (pthread_mutex_trylock(&mutex_remove))
         ;
@@ -80,48 +78,50 @@ void *remove_song(void *args)
     pthread_exit(NULL);
 }
 
-int pause_song = 0;
-int stop_song = 0;
-bool song_playing = false;
-int next_song = 0;
+int pause_song = 0;        //booleano para pausar a musica
+int stop_song = 0;         //booleano para parar a musica
+bool song_playing = false; //booleano para saber se a musica esta tocando
+int next_song = 0;         //booleano para ir para a proxima musica
 
-void *play_song(void *args)
+void *play_song(void *args) //funcao que roda a musica
 {
-    int choice = *(int *) args;
-    WINDOW *song_win = newwin(maxY / 2, maxX / 2, maxY / 2, 0);
+    int choice = *(int *)args;
+    WINDOW *song_win = newwin(maxY / 2, maxX / 2, maxY / 2, 0); //cria uma nova janela no terminal
     refresh();
     box(song_win, 0, 0);
     mvwprintw(song_win, 0, (maxX / 2 - strlen("Song")) / 2, "Song");
     wrefresh(song_win);
     song_playing = true;
     stop_song = 0;
-    
 
-    
     while (true)
     {
-        Song song; 
-        if (choice < length){
+        Song song;
+        if (choice < length)
+        { //checa se passou dos limites
             song = songs[choice];
-        } else {
+        }
+        else
+        {
             song = songs[0];
             choice = 0;
         }
-        
+
         int time = 0;
         mvwprintw(song_win, 1, 1, "Song: %s", song.song_name.c_str());
         while (time <= song.duration)
         {
-            if (pause_song == 0)
+            if (pause_song == 0) //roda a musica a cada segundo e pode pausar
             {
                 mvwprintw(song_win, 2, 1, "%d/%d", time, song.duration);
                 wrefresh(song_win);
                 napms(1000);
                 time++;
             }
-            if (stop_song == 1)
+            if (stop_song == 1) //para a musica
                 break;
-            if (next_song == 1){
+            if (next_song == 1)
+            { //vai pra proxima musica
                 break;
             }
         }
@@ -130,8 +130,9 @@ void *play_song(void *args)
         wclear(song_win);
         werase(song_win);
         box(song_win, 0, 0);
-        mvwprintw(song_win, 0, (maxX / 2 - strlen("Song")) / 2, "Song");
-        if (stop_song == 1) break;
+        mvwprintw(song_win, 0, (maxX / 2 - strlen("Song")) / 2, "Song"); //limpa a janela e coloca a nova musica
+        if (stop_song == 1)
+            break;
     }
 
     pause_song = 0;
@@ -165,6 +166,7 @@ int main()
     mvwprintw(menu_win, 6, 1, "Exit - e");
     wrefresh(playlist_win);
     wrefresh(menu_win);
+    //printa as janelas
 
     keypad(playlist_win, true);
     int highlight = 0;
@@ -178,7 +180,7 @@ int main()
     while (true)
     {
         wrefresh(playlist_win);
-        for (int i = range_begin; i < range_end; i++)
+        for (int i = range_begin; i < range_end; i++) //printa a lista de musicas na tela, se passa do limite faz um "slider"
         {
             if (i < length)
             {
@@ -199,7 +201,7 @@ int main()
 
         switch (command)
         {
-        case KEY_UP:
+        case KEY_UP: //pra caso subir
             highlight--;
             if (highlight < range_begin)
                 range_begin--, range_end--;
@@ -208,7 +210,7 @@ int main()
             if (range_begin < 0)
                 range_begin++, range_end++;
             break;
-        case KEY_DOWN:
+        case KEY_DOWN: //pra caso descer
             highlight++;
             if (highlight >= range_end && length >= 10)
                 range_begin++, range_end++;
@@ -217,14 +219,14 @@ int main()
             if (range_end > length && length >= 10)
                 range_begin--, range_end--;
             break;
-        case 'a':
+        case 'a': //adiciona musica na lista de musicas
             wclear(playlist_win);
 
             box(playlist_win, 0, 0);
             mvwprintw(playlist_win, 0, (maxX - strlen("Add song")) / 2, "Add song");
             mvwprintw(playlist_win, 1, 1, "Type the name of the song ");
             wrefresh(playlist_win);
-            while (true)
+            while (true) //le o nome da musica
             {
                 int c = wgetch(playlist_win);
                 if (c == ERR || c == '\n')
@@ -237,7 +239,7 @@ int main()
                 wrefresh(playlist_win);
             }
             mvwprintw(playlist_win, 2, 1, "Type the duration of the song in seconds ");
-            while (true)
+            while (true) //le a duracao da musica
             {
                 int c = wgetch(playlist_win);
                 if (c == ERR || c == '\n')
@@ -254,13 +256,13 @@ int main()
             song.duration = duration;
 
             pthread_t add_thread;
-            pthread_create(&add_thread, NULL, &add_song, &song);
+            pthread_create(&add_thread, NULL, &add_song, &song); //adiciona
             pthread_cond_wait(&cond_add, &mutex_add);
             wclear(playlist_win);
             box(playlist_win, 0, 0);
             mvwprintw(playlist_win, 0, (maxX - strlen("Playlist")) / 2, "Playlist");
             break;
-        case 'd':
+        case 'd': //remove a musica da lista
 
             pthread_t remove_thread;
             pthread_create(&remove_thread, NULL, &remove_song, &highlight);
@@ -272,17 +274,17 @@ int main()
 
             highlight = 0;
             break;
-        case 'p':
+        case 'p': //play song
             stop_song = 1;
             sleep(1);
             pthread_t song_thread;
 
             pthread_create(&song_thread, NULL, &play_song, &highlight);
             break;
-        case 's':
+        case 's': //stop song
             pause_song = abs(pause_song - 1);
             break;
-        case 'n':
+        case 'n': //next song
             next_song = 1;
             break;
         }
