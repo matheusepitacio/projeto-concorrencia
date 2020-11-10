@@ -1,6 +1,10 @@
 /*
     Dupla: Matheus Epitacio Barros de Lucena e Matheus Marinho Morais Leca
-    mebl e mmml2
+*/
+
+/*
+    OBS:
+    Nao consegue remover uma musica que esteja tocando
 */
 
 #include <bits/stdc++.h>
@@ -82,6 +86,7 @@ int pause_song = 0;        //booleano para pausar a musica
 int stop_song = 0;         //booleano para parar a musica
 bool song_playing = false; //booleano para saber se a musica esta tocando
 int next_song = 0;         //booleano para ir para a proxima musica
+int random_sequence = 0;   //booleano para alternar entre reproducao sequencial e aleatoria
 
 void *play_song(void *args) //funcao que roda a musica
 {
@@ -126,7 +131,12 @@ void *play_song(void *args) //funcao que roda a musica
             }
         }
         next_song = 0;
-        choice++;
+        if (random_sequence == 0){ //se e 0, a sequencia segue normalmente
+            choice++;
+        }
+        else { //se for pra ser aleatorio, a sequencia vira aleatoria
+            choice = rand() % length;
+        }
         wclear(song_win);
         werase(song_win);
         box(song_win, 0, 0);
@@ -164,6 +174,7 @@ int main()
     mvwprintw(menu_win, 4, 1, "Pause/return song - s");
     mvwprintw(menu_win, 5, 1, "Next song - n");
     mvwprintw(menu_win, 6, 1, "Exit - e");
+    mvwprintw(menu_win, 7, 1, "Random or sequencial playback - r");
     wrefresh(playlist_win);
     wrefresh(menu_win);
     //printa as janelas
@@ -286,6 +297,9 @@ int main()
             break;
         case 'n': //next song
             next_song = 1;
+            break;
+        case 'r': //troca entra random or sequencial playback
+            random_sequence = abs(random_sequence - 1);
             break;
         }
     }
